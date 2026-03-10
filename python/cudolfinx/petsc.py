@@ -154,10 +154,25 @@ class NonlinearProblem:
             addv=PETSc.InsertMode.INSERT, mode=PETSc.ScatterMode.FORWARD
         )
 
+        # create CUDA vector for x for BC application
+        x_cuda = CUDAVector(self._assembler._ctx, x)
+
         # assemble and apply BCs
         self._assembler.assemble_vector(self._cuda_F, self._cuda_b, zero=True)
-        self._assembler.apply_lifting(self._cuda_b, [self._cuda_J], [self._cuda_bcs])
-        self._assembler.set_bc(self._cuda_b, bcs=self._cuda_bcs, V=self._u.function_space)
+        self._assembler.apply_lifting(
+            self._cuda_b,
+            [self._cuda_J],
+            [self._bcs],
+            x0=[x_cuda],
+            scale=-1.0,
+        )
+        self._assembler.set_bc(
+            self._cuda_b,
+            bcs=self._bcs,
+            V=self._u.function_space,
+            x0=x_cuda,
+            scale=-1.0,
+        )
 
         # copy assembled vector to PETSc work vector
         self._cuda_b.vector.copy(b)
@@ -214,10 +229,10 @@ class NonlinearProblem:
         """
 
         # copy u to x
-        self._u.x.petsc_vec.copy(self._x)
         self._u.x.petsc_vec.ghostUpdate(
             addv=PETSc.InsertMode.INSERT, mode=PETSc.ScatterMode.FORWARD
         )
+        self._u.x.petsc_vec.copy(self._x)
 
         # solve
         self._snes.solve(None, self._x)
