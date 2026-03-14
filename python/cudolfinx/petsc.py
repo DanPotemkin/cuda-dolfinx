@@ -107,6 +107,9 @@ class NonlinearProblem:
         # solution work vector for SNES (plain PETSc Vec with same layout as b)
         self._x: PETSc.Vec = self._cuda_b.vector.copy()  # type: ignore[attr-defined]
 
+        # persistent CUDA vector wrapping u (owned + ghost DOFs) for residual assembly
+        self._cuda_u = CUDAVector(self._assembler._ctx, u.x.petsc_vec, include_ghosts=True)
+
         # SNES object
         self._snes: PETSc.SNES = PETSc.SNES().create(  # type: ignore[attr-defined]
             self._cuda_b.vector.comm
@@ -154,14 +157,14 @@ class NonlinearProblem:
         and not the original residual vector created in ``__init__``
         """
 
-        # copy x to u
+        # copy x to u and update ghosts
         x.copy(self._u.x.petsc_vec)
         self._u.x.petsc_vec.ghostUpdate(
             addv=PETSc.InsertMode.INSERT, mode=PETSc.ScatterMode.FORWARD
         )
 
-        # create CUDA vector wrapping u's petsc vec (already ghost-updated)
-        x_cuda = CUDAVector(self._assembler._ctx, self._u.x.petsc_vec)
+        # update the persistent CUDA vector with the current u values (including ghosts)
+        self._cuda_u.to_device()
 
         # assemble and apply BCs
         self._assembler.assemble_vector(self._cuda_F, self._cuda_b, zero=True)
@@ -169,14 +172,14 @@ class NonlinearProblem:
             self._cuda_b,
             [self._cuda_J],
             [self._cuda_bcs],
-            x0=[x_cuda],
+            x0=[self._cuda_u],
             scale=-1.0,
         )
         self._assembler.set_bc(
             self._cuda_b,
             bcs=self._cuda_bcs,
             V=self._u.function_space,
-            x0=x_cuda,
+            x0=self._cuda_u,
             scale=-1.0,
         )
 
