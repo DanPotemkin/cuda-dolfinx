@@ -23,6 +23,8 @@ class NonlinearProblem:
     High-level class for solving nonlinear variational problems
     with PETSc SNES on the GPU, adapted from and and resembling
     the interface of dolfinx.fem.petsc.NonlinearProblem
+
+    (currently not supporting block/multi-form problems)
     """
 
     def __init__(
@@ -52,30 +54,34 @@ class NonlinearProblem:
         P: UFL form(s) for an optional preconditioner matrix
         petsc_options: Options forwarded to the PETSc SNES solver
         cuda_jit_options: Passed to the CUDA JIT compiler
-
         """
 
-        # TODO: extend to block/multi-form problems
-        assert isinstance(F, ufl.Form), "Currently only single residual forms are supported"
+        # check types of forms
+        assert isinstance(F, ufl.Form), (
+            f"F must be a ufl.Form, got {type(F).__name__}. "
+            "Block/multi-form problems are not yet supported."
+        )
         if J is not None:
-            assert isinstance(J, ufl.Form), "Currently only single Jacobian forms are supported"
+            assert isinstance(J, ufl.Form), (
+                f"J must be a ufl.Form, got {type(J).__name__}. "
+                "Block/multi-form problems are not yet supported."
+            )
         if P is not None:
             assert isinstance(P, ufl.Form), (
-                "Currently only single preconditioner forms are supported"
+                f"P must be a ufl.Form, got {type(P).__name__}. "
+                "Block/multi-form problems are not yet supported."
             )
 
         if petsc_options_prefix == "":
             raise ValueError("PETSc options prefix cannot be empty.")
 
         self._assembler = CUDAAssembler()
-
         self._u = u
-
         bcs = [] if bcs is None else list(bcs)
         self._bcs = bcs
-
         self._cuda_bcs = self._assembler.pack_bcs(bcs)
 
+        # automatically derive Jacobian form if not provided
         if J is None:
             J = ufl.derivative(F, u, ufl.TrialFunction(u.function_space))
 
@@ -86,7 +92,7 @@ class NonlinearProblem:
             _cuda_form(P, cuda_jit_args=cuda_jit_options or {}) if P is not None else None
         )
 
-        # Jacobian matrix (CUDA-backed PETSc Mat)
+        # Jacobian matrix
         self._cuda_A = self._assembler.create_matrix(self._cuda_J)
 
         # preconditioner matrix
@@ -95,7 +101,7 @@ class NonlinearProblem:
         else:
             self._cuda_P_mat = None
 
-        # residual vector (CUDA-backed PETSc Vec)
+        # residual vector
         self._cuda_b = self._assembler.create_vector(self._cuda_F)
 
         # solution work vector for SNES (plain PETSc Vec with same layout as b)
@@ -154,21 +160,21 @@ class NonlinearProblem:
             addv=PETSc.InsertMode.INSERT, mode=PETSc.ScatterMode.FORWARD
         )
 
-        # create CUDA vector for x for BC application
-        x_cuda = CUDAVector(self._assembler._ctx, x)
+        # create CUDA vector wrapping u's petsc vec (already ghost-updated)
+        x_cuda = CUDAVector(self._assembler._ctx, self._u.x.petsc_vec)
 
         # assemble and apply BCs
         self._assembler.assemble_vector(self._cuda_F, self._cuda_b, zero=True)
         self._assembler.apply_lifting(
             self._cuda_b,
             [self._cuda_J],
-            [self._bcs],
+            [self._cuda_bcs],
             x0=[x_cuda],
             scale=-1.0,
         )
         self._assembler.set_bc(
             self._cuda_b,
-            bcs=self._bcs,
+            bcs=self._cuda_bcs,
             V=self._u.function_space,
             x0=x_cuda,
             scale=-1.0,
@@ -206,7 +212,7 @@ class NonlinearProblem:
             self._cuda_P_mat.assemble()
             P.assemble()
 
-    def solve(self) -> Function | Sequence[Function]:
+    def solve(self) -> Function:
         """
         solve the nonlinear problem with PETSc SNES
 
@@ -233,6 +239,9 @@ class NonlinearProblem:
             addv=PETSc.InsertMode.INSERT, mode=PETSc.ScatterMode.FORWARD
         )
         self._u.x.petsc_vec.copy(self._x)
+
+        # update BCs
+        self._cuda_bcs.update(self._bcs)
 
         # solve
         self._snes.solve(None, self._x)

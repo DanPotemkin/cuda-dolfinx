@@ -20,6 +20,8 @@ from ufl import dx, grad, inner
 import dolfinx
 from dolfinx import mesh
 from dolfinx.fem.petsc import NonlinearProblem
+
+import cudolfinx as cufem
 from cudolfinx.petsc import NonlinearProblem as cuNonlinearProblem
 
 # petsc logging to see GPU utilization, CpuToGpu and GpuToCpu times, etc.
@@ -45,6 +47,11 @@ def main(res: int = 30, degree: int = 1, dim: int = 3, cuda: bool = True):
 
     domain = create_mesh(res, dim=dim)
     comm = domain.comm
+
+    if cuda and comm.size > 1:
+        if comm.rank == 0:
+            print("Using ghost layer mesh for CUDA Assembly")
+        domain = cufem.ghost_layer_mesh(domain)
 
     V = dolfinx.fem.functionspace(domain, ("Lagrange", degree))
 
