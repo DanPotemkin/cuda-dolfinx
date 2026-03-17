@@ -112,7 +112,7 @@ class NonlinearProblem:
 
         # SNES object
         self._snes: PETSc.SNES = PETSc.SNES().create(  # type: ignore[attr-defined]
-            self._cuda_b.vector.comm
+            u.function_space.mesh.comm
         )
 
         self._snes.setFunction(self._assemble_residual, self._cuda_b.vector)
@@ -166,25 +166,25 @@ class NonlinearProblem:
         # update the persistent CUDA vector with the current u values (including ghosts)
         self._cuda_u.to_device()
 
+        # wrap b vector passed in from SNES and assemble directly into it, avoiding a copy
+        cuda_b = CUDAVector(self._assembler._ctx, b)
+
         # assemble and apply BCs
-        self._assembler.assemble_vector(self._cuda_F, self._cuda_b, zero=True)
+        self._assembler.assemble_vector(self._cuda_F, cuda_b, zero=True)
         self._assembler.apply_lifting(
-            self._cuda_b,
+            cuda_b,
             [self._cuda_J],
             [self._cuda_bcs],
             x0=[self._cuda_u],
             scale=-1.0,
         )
         self._assembler.set_bc(
-            self._cuda_b,
+            cuda_b,
             bcs=self._cuda_bcs,
             V=self._u.function_space,
             x0=self._cuda_u,
             scale=-1.0,
         )
-
-        # copy assembled vector to PETSc work vector
-        self._cuda_b.vector.copy(b)
 
     def _assemble_jacobian(
         self,
