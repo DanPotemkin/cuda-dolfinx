@@ -91,10 +91,12 @@ def main(res: int = 30, degree: int = 1, dim: int = 3, cuda: bool = True):
         "snes_atol": 1e-10,
         "snes_max_it": 25,
         "snes_converged_reason": "",
+        "snes_error_if_not_converged": True,
         "ksp_type": "cg",
         "ksp_rtol": 1e-12,
         "ksp_max_it": 500,
         "ksp_converged_reason": "",
+        "ksp_error_if_not_converged": True,
         "pc_type": "gamg",
     }
 
