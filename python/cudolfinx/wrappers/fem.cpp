@@ -190,10 +190,12 @@ void declare_cuda_objects(nb::module_& m)
   nb::class_<dolfinx::la::CUDAVector>(m, "CUDAVector", "Vector object on GPU")
       .def(
           "__init__",
-          [](dolfinx::la::CUDAVector* cuvec, const dolfinx::CUDA::Context& cuda_context, Vec x) {
-            new (cuvec) dolfinx::la::CUDAVector(cuda_context, x, false, false);
-          }, nb::arg("context"), nb::arg("x"))
+          [](dolfinx::la::CUDAVector* cuvec, const dolfinx::CUDA::Context& cuda_context,
+             Vec x, bool include_ghosts) {
+            new (cuvec) dolfinx::la::CUDAVector(cuda_context, x, false, include_ghosts);
+          }, nb::arg("context"), nb::arg("x"), nb::arg("include_ghosts") = false)
       .def("to_host", &dolfinx::la::CUDAVector::copy_vector_values_to_host)
+      .def("to_device", &dolfinx::la::CUDAVector::copy_vector_values_to_device)
       .def_prop_ro("vector",
           [](dolfinx::la::CUDAVector& cuvec) {
             Vec b = cuvec.vector();

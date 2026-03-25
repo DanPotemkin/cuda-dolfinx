@@ -10,13 +10,13 @@ class CUDAVector:
   """Vector on device
   """
 
-  def __init__(self, ctx, vec):
+  def __init__(self, ctx, vec, include_ghosts: bool = False):
     """Initialize the vector
     """
 
     self._petsc_vec = vec
     self._ctx = ctx
-    self._cpp_object = _cucpp.fem.CUDAVector(ctx, self._petsc_vec)
+    self._cpp_object = _cucpp.fem.CUDAVector(ctx, self._petsc_vec, include_ghosts)
 
   @property
   def vector(self):
@@ -30,6 +30,12 @@ class CUDAVector:
     """
 
     self._cpp_object.to_host(self._ctx)
+
+  def to_device(self):
+    """Copy host-side values (including ghosts) to device
+    """
+
+    self._cpp_object.to_device(self._ctx)
 
   def __del__(self):
     """Delete the vector and free up GPU resources
