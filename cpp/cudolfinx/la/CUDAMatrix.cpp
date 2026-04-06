@@ -110,7 +110,7 @@ CUDAMatrix::CUDAMatrix(
     if (ierr != 0)
       la::petsc::error(ierr, __FILE__, "MatGetLocalToGlobalMapping");
 
-    std::vector<std::PetscInt> colmap_local(_num_local_offdiag_columns);
+    std::vector<PetscInt> colmap_local(_num_local_offdiag_columns);
     ierr = ISGlobalToLocalMappingApply(
       cmapping, IS_GTOLM_MASK, _num_local_offdiag_columns, colmap,
       NULL, colmap_local.data());
@@ -119,25 +119,25 @@ CUDAMatrix::CUDAMatrix(
 
     // Allocate device-side storage for off-diagonal column map
     if (_num_local_offdiag_columns > 0) {
-      std::vector<std::pair<std::PetscInt, std::PetscInt>> combined;
+      std::vector<std::pair<PetscInt, PetscInt>> combined;
       for (int i = 0; i < colmap_local.size(); i++) {
         combined.emplace_back(colmap_local[i], i);
       }
       std::sort(combined.begin(), combined.end(),
-            [](const std::pair<std::PetscInt, std::PetscInt>& a, const std::pair<std::PetscInt, std::PetscInt>& b) {
+            [](const std::pair<PetscInt, PetscInt>& a, const std::pair<PetscInt, PetscInt>& b) {
               return a.first < b.first;
             });
-      std::vector<std::PetscInt> colmap_sorted(combined.size());
-      std::vector<std::PetscInt> colmap_sorted_indices(combined.size());
+      std::vector<PetscInt> colmap_sorted(combined.size());
+      std::vector<PetscInt> colmap_sorted_indices(combined.size());
 
       for (int i = 0; i < combined.size(); i++) {
 	 colmap_sorted[i] = combined[i].first;
          colmap_sorted_indices[i] = combined[i].second;
       }
 
-      dolfinx::CUDA::safeVectorCreate<std::PetscInt>(&_dcolmap, colmap_local);
-      dolfinx::CUDA::safeVectorCreate<std::PetscInt>(&_dcolmap_sorted, colmap_sorted);
-      dolfinx::CUDA::safeVectorCreate<std::PetscInt>(&_dcolmap_sorted_indices, colmap_sorted_indices);
+      dolfinx::CUDA::safeVectorCreate<PetscInt>(&_dcolmap, colmap_local);
+      dolfinx::CUDA::safeVectorCreate<PetscInt>(&_dcolmap_sorted, colmap_sorted);
+      dolfinx::CUDA::safeVectorCreate<PetscInt>(&_dcolmap_sorted_indices, colmap_sorted_indices);
     }
 
   } else {

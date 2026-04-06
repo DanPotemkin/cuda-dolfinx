@@ -91,9 +91,9 @@ CUDASeqMatrix::CUDASeqMatrix(
     la::petsc::error(ierr, __FILE__, "MatGetOwnershipRange");
 
   // Obtain the row pointers and column indices of the matrix
-  std::PetscInt n;
-  const std::PetscInt* row_ptr = nullptr;
-  const std::PetscInt* column_indices = nullptr;
+  PetscInt n;
+  const PetscInt* row_ptr = nullptr;
+  const PetscInt* column_indices = nullptr;
   PetscInt shift = 0;
   PetscBool symmetric = PETSC_FALSE;
   PetscBool inodecompressed = PETSC_FALSE;
