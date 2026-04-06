@@ -65,13 +65,13 @@ public:
   const Vec vector() const { return _x; }
 
   /// Get the number of vector values
-  int32_t num_values() const { return _num_values; }
+  PetscInt num_values() const { return _num_values; }
 
   /// Get the number of local vector values
-  int32_t num_local_values() const { return _num_local_values; }
+  PetscInt num_local_values() const { return _num_local_values; }
 
   /// Get the number of local vector values
-  int32_t num_local_ghosted_values() const { return _num_local_ghosted_values; }
+  PetscInt num_local_ghosted_values() const { return _num_local_ghosted_values; }
 
   bool ghosted() const;
 
@@ -149,19 +149,19 @@ private:
   bool _include_ghosts;
 
   /// The number of values in the global vector
-  int32_t _num_values;
+  PetscInt _num_values;
 
   /// The number of values owned by the current MPI rank
-  int32_t _num_local_values;
+  PetscInt _num_local_values;
 
   /// The number of values owned by the current MPI rank
-  int32_t _num_local_ghosted_values;
+  PetscInt _num_local_ghosted_values;
 
   /// The first value owned by the current MPI rank
-  int32_t _local_values_start;
+  PetscInt _local_values_start;
 
   /// The last value owned by the current MPI rank
-  int32_t _local_values_end;
+  PetscInt _local_values_end;
 
   /// Device-side storage for non-zero values
   mutable CUdeviceptr _dvalues;

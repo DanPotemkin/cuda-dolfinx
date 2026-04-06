@@ -81,25 +81,25 @@ public:
   CUdeviceptr colmap_sorted_indices() const { return _dcolmap_sorted_indices; }
 
   /// Get the number of matrix rows
-  int32_t num_rows() const { return _num_rows; }
+  PetscInt num_rows() const { return _num_rows; }
 
   /// Get the number of matrix columns
-  int32_t num_columns() const { return _num_columns; }
+  PetscInt num_columns() const { return _num_columns; }
 
   /// Get the global index of the first row
-  int32_t local_row_start() const { return _local_row_start; }
+  PetscInt local_row_start() const { return _local_row_start; }
 
   /// Get the global index of the last row
-  int32_t local_row_end() const { return _local_row_end; }
+  PetscInt local_row_end() const { return _local_row_end; }
 
   /// Get the number of local matrix rows
-  int32_t num_local_rows() const { return _num_local_rows; }
+  PetscInt num_local_rows() const { return _num_local_rows; }
 
   /// Get the number of local matrix columns
-  int32_t num_local_columns() const { return _num_local_columns; }
+  PetscInt num_local_columns() const { return _num_local_columns; }
 
   /// Get the number of local matrix columns in the off-diagonal part
-  int32_t num_local_offdiag_columns() const { return _num_local_offdiag_columns; }
+  PetscInt num_local_offdiag_columns() const { return _num_local_offdiag_columns; }
 
   /// Update the values of the underlying PETSc matrix by copying
   /// values from device memory to host memory.
@@ -134,26 +134,26 @@ private:
   CUdeviceptr _dcolmap_sorted_indices;
 
   /// The number of rows in the global matrix
-  int32_t _num_rows;
+  PetscInt _num_rows;
 
   /// The number of columns in the global matrix
-  int32_t _num_columns;
+  PetscInt _num_columns;
 
   /// The first row owned by the current MPI process
-  int32_t _local_row_start;
+  PetscInt _local_row_start;
 
   /// The last row owned by the current MPI process
-  int32_t _local_row_end;
+  PetscInt _local_row_end;
 
   /// The number of rows owned by the current MPI process
-  int32_t _num_local_rows;
+  PetscInt _num_local_rows;
 
   /// The number of columns owned by the current MPI process
-  int32_t _num_local_columns;
+  PetscInt _num_local_columns;
 
   /// The number of columns in the off-diagonal part of the local
   /// matrix owned by the current MPI process
-  int32_t _num_local_offdiag_columns;
+  PetscInt _num_local_offdiag_columns;
 };
 
 } // namespace dolfinx::la

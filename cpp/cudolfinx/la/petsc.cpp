@@ -24,13 +24,13 @@ Mat dolfinx::la::petsc::create_cuda_matrix(MPI_Comm comm, const dolfinx::la::Spa
   // Get global and local dimensions
   const std::int64_t M = bs[0] * maps[0]->size_global();
   const std::int64_t N = bs[1] * maps[1]->size_global();
-  const std::int32_t m = bs[0] * maps[0]->size_local();
-  const std::int32_t n = bs[1] * maps[1]->size_local();
+  const std::PetscInt m = bs[0] * maps[0]->size_local();
+  const std::PetscInt n = bs[1] * maps[1]->size_local();
 
   // Build data to initialise sparsity pattern (modify for block size)
   std::vector<PetscInt> _row_ptr;
   // Need to ensure correct int type. . .
-  std::vector<std::int32_t> _column_indices;
+  std::vector<std::PetscInt> _column_indices;
   auto [_edges, _offsets]  = sp.graph();
 
   // The CUDA assembly kernels aren't currently robust to matrices with variable block size

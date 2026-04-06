@@ -91,9 +91,9 @@ CUDASeqMatrix::CUDASeqMatrix(
     la::petsc::error(ierr, __FILE__, "MatGetOwnershipRange");
 
   // Obtain the row pointers and column indices of the matrix
-  std::int32_t n;
-  const std::int32_t* row_ptr = nullptr;
-  const std::int32_t* column_indices = nullptr;
+  std::PetscInt n;
+  const std::PetscInt* row_ptr = nullptr;
+  const std::PetscInt* column_indices = nullptr;
   PetscInt shift = 0;
   PetscBool symmetric = PETSC_FALSE;
   PetscBool inodecompressed = PETSC_FALSE;
@@ -119,7 +119,7 @@ CUDASeqMatrix::CUDASeqMatrix(
 
   // Allocate device-side storage for row pointers
   if (_num_local_rows > 0) {
-    size_t drow_ptr_size = (_num_local_rows+1) * sizeof(int32_t);
+    size_t drow_ptr_size = (_num_local_rows+1) * sizeof(PetscInt);
     cuda_err = cuMemAlloc(&_drow_ptr, drow_ptr_size);
     if (cuda_err != CUDA_SUCCESS) {
       cuGetErrorString(cuda_err, &cuda_err_description);
@@ -152,7 +152,7 @@ CUDASeqMatrix::CUDASeqMatrix(
 
   // Allocate device-side storage for column indices
   if (_num_local_nonzeros > 0) {
-    size_t dcolumn_indices_size = _num_local_nonzeros * sizeof(int32_t);
+    size_t dcolumn_indices_size = _num_local_nonzeros * sizeof(PetscInt);
     cuda_err = cuMemAlloc(&_dcolumn_indices, dcolumn_indices_size);
     if (cuda_err != CUDA_SUCCESS) {
       cuGetErrorString(cuda_err, &cuda_err_description);
