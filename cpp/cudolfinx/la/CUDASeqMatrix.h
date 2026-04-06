@@ -66,28 +66,28 @@ public:
   Mat mat() { return _A; }
 
   /// Get the number of matrix rows
-  int32_t num_rows() const { return _num_rows; }
+  PetscInt num_rows() const { return _num_rows; }
 
   /// Get the number of matrix columns
-  int32_t num_columns() const { return _num_columns; }
+  PetscInt num_columns() const { return _num_columns; }
 
   /// Get the global index of the first row
-  int32_t local_row_start() const { return _local_row_start; }
+  PetscInt local_row_start() const { return _local_row_start; }
 
   /// Get the global index of the last row
-  int32_t local_row_end() const { return _local_row_end; }
+  PetscInt local_row_end() const { return _local_row_end; }
 
   /// Get the number of local matrix rows
-  int32_t num_local_rows() const { return _num_local_rows; }
+  PetscInt num_local_rows() const { return _num_local_rows; }
 
   /// Get the number of local matrix columns
-  int32_t num_local_columns() const { return _num_local_columns; }
+  PetscInt num_local_columns() const { return _num_local_columns; }
 
   /// Get a handle to the device-side row pointers
   CUdeviceptr row_ptr() const { return _drow_ptr; }
 
   /// Get the number of local non-zeros
-  int32_t num_local_nonzeros() const { return _num_local_nonzeros; }
+  PetscInt num_local_nonzeros() const { return _num_local_nonzeros; }
 
   /// Get a handle to the device-side column indices
   CUdeviceptr column_indices() const { return _dcolumn_indices; }
@@ -119,28 +119,28 @@ private:
   bool _values_page_locked;
 
   /// The number of rows in the global matrix
-  int32_t _num_rows;
+  PetscInt _num_rows;
 
   /// The number of columns in the global matrix
-  int32_t _num_columns;
+  PetscInt _num_columns;
 
   /// The first row owned by the current MPI process
-  int32_t _local_row_start;
+  PetscInt _local_row_start;
 
   /// The last row owned by the current MPI process
-  int32_t _local_row_end;
+  PetscInt _local_row_end;
 
   /// The number of rows owned by the current MPI process
-  int32_t _num_local_rows;
+  PetscInt _num_local_rows;
 
   /// The number of columns owned by the current MPI process
-  int32_t _num_local_columns;
+  PetscInt _num_local_columns;
 
   /// Device-side storage for row pointers
   CUdeviceptr _drow_ptr;
 
   /// The number of non-zeros in the global matrix
-  int32_t _num_local_nonzeros;
+  PetscInt _num_local_nonzeros;
 
   /// Device-side storage for column indices
   CUdeviceptr _dcolumn_indices;
