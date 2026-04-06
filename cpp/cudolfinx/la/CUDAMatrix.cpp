@@ -88,7 +88,7 @@ CUDAMatrix::CUDAMatrix(
     // For a distributed matrix, we obtain local diagonal and
     // off-diagonal blocks using MatMPIAIJGetSeqAIJ().
     Mat Ad, Ao;
-    const int * colmap;
+    const PetscInt * colmap;
     ierr = MatMPIAIJGetSeqAIJ(A, &Ad, &Ao, &colmap);
     if (ierr != 0)
       la::petsc::error(ierr, __FILE__, "MatMPIAIJGetSeqAIJ");
